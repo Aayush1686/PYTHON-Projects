@@ -1,2 +1,91 @@
-[InternetShortcut]
-URL=file:///c%3A/Users/dobar/MOHIT/NODE-JS/templates/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload Example</title>
+    <style>
+        .ok {
+            font-size: 20px;
+        }
+        .op {
+            font-size: 20px;
+            margin-left: -70px;
+            font-weight: bold;
+            background-color: yellow;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .uploaded-files {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            width: 50%;
+        }
+        .delete-btn, .update-btn {
+            margin-left: 10px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            color: white;
+        }
+        .delete-btn {
+            background-color: red;
+        }
+        .update-btn {
+            background-color: blue;
+        }
+    </style>
+    <script>
+        function deleteFile(filename) {
+            fetch(/delete/${filename}, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message || data.error);
+                    location.reload();
+                });
+        }
+
+        function updateFile(oldFilename) {
+            let newFilename = prompt("Enter new file name:", oldFilename);
+            if (newFilename && newFilename !== oldFilename) {
+                fetch(/update/${oldFilename}, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new_filename=${newFilename}
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message || data.error);
+                    location.reload();
+                });
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="center">
+        <h1> Uploading and Managing Files in Flask </h1>
+        <form method="POST" action="/upload" enctype="multipart/form-data">
+            <input class="ok" type="file" name="file">
+            <button class="op" type="submit">Upload</button>
+        </form>
+
+        {% if uploaded_files %}
+        <div class="uploaded-files">
+            <h3>Uploaded Files:</h3>
+            <ul>
+                {% for file in uploaded_files %}
+                <li>
+                    {{ file }}
+                    <button class="delete-btn" onclick="deleteFile('{{ file }}')">Delete</button>
+                    <button class="update-btn" onclick="updateFile('{{ file }}')">Rename</button>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
