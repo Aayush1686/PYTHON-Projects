@@ -1,2 +1,69 @@
-[InternetShortcut]
-URL=file:///c%3A/Users/dobar/MOHIT/NODE-JS/todo.py
+from flask import Flask, render_template, request, jsonify, redirect, url_for
+import os
+
+app = Flask(_name_)
+app.config['UPLOAD_FOLDER'] = 'uploads'
+
+# Ensure upload folder exists
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Store uploaded file names
+uploaded_files = []
+
+@app.route('/')
+def index():
+    # Refresh uploaded_files list
+    global uploaded_files
+    uploaded_files = os.listdir(app.config['UPLOAD_FOLDER'])
+    return render_template('index.html', uploaded_files=uploaded_files)
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return redirect(url_for('index'))
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return redirect(url_for('index'))
+
+    if file:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(file_path)
+
+        # Refresh the uploaded files list
+        uploaded_files.append(file.filename)
+    
+    return redirect(url_for('index'))
+
+@app.route('/delete/<filename>', methods=['POST'])
+def delete_file(filename):
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        uploaded_files.remove(filename)
+        return jsonify({'message': f'File "{filename}" deleted successfully!'})
+    
+    return jsonify({'error': 'File not found'}), 404
+
+@app.route('/update/<old_filename>', methods=['POST'])
+def update_file(old_filename):
+    new_filename = request.form.get('new_filename')
+
+    old_file_path = os.path.join(app.config['UPLOAD_FOLDER'], old_filename)
+    new_file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+
+    if os.path.exists(old_file_path):
+        os.rename(old_file_path, new_file_path)
+
+        # Update the uploaded files list
+        uploaded_files.remove(old_filename)
+        uploaded_files.append(new_filename)
+
+        return jsonify({'message': f'File renamed to "{new_filename}" successfully!'})
+    
+    return jsonify({'error': 'File not found'}), 404
+
+if _name_ == '_main_':
+    app.run(debug=True)
